@@ -1,8 +1,14 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  OneToMany,
+  JoinColumn,
+} from 'typeorm';
+import Image from './Image';
 
 @Entity('tb_orphanage')
 export default class Orphanage {
-  
   @PrimaryGeneratedColumn('increment', { name: 'id_orphanage' })
   id: number;
 
@@ -26,4 +32,10 @@ export default class Orphanage {
 
   @Column({ name: 'fl_openonweekends' })
   open_on_weekends: boolean;
+
+  @OneToMany(() => Image, (image) => image.orphanage, {
+    cascade: ['insert', 'update'],
+  })
+  @JoinColumn({ name: 'cd_orphanage' })
+  images: Image[];
 }
