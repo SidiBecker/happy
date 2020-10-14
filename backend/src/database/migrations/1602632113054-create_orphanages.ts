@@ -4,10 +4,10 @@ export class createOrphanages1602632113054 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.createTable(
       new Table({
-        name: 'tb_orphanages',
+        name: 'tb_orphanage',
         columns: [
           {
-            name: 'id_orphanages',
+            name: 'id_orphanage',
             type: 'integer',
             unsigned: true,
             isPrimary: true,
@@ -43,6 +43,10 @@ export class createOrphanages1602632113054 implements MigrationInterface {
             name: 'fl_openonweekends',
             type: 'boolean',
           },
+          {
+            name: 'tx_openinghours',
+            type: 'varchar',
+          }
         ],
       })
     );
