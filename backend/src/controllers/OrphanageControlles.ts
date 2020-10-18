@@ -78,7 +78,6 @@ export default {
 
     const orphanage = orphanagesRepository.create(data);
 
-    console.log(orphanage);
     await orphanagesRepository.save(orphanage);
 
     return res.status(201).send(orphanage);
