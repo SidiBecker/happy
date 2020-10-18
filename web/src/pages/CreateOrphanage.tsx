@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { ChangeEvent, FormEvent, SyntheticEvent, useState } from 'react';
 import { Map, Marker, TileLayer } from 'react-leaflet';
+
+import { LeafletMouseEvent } from 'leaflet';
 
 import { FiPlus } from 'react-icons/fi';
 
@@ -7,53 +9,152 @@ import happyMapIcon from '../utils/mapIcon';
 
 import '../styles/pages/create-orphanage.css';
 import Sidebar from '../components/Sidebar';
+import api from '../services/api';
+import { useHistory } from 'react-router-dom';
 
 export default function CreateOrphanage() {
+  const history = useHistory();
+
+  const [position, setPosition] = useState({ latitude: 0, longitude: 0 });
+  const [name, setName] = useState('');
+  const [about, setAbout] = useState('');
+  const [instructions, setInstructions] = useState('');
+  const [opening_hours, setOpeningHours] = useState('');
+  const [open_on_weekends, setOpenOnWeekends] = useState(true);
+  const [images, setImages] = useState<File[]>();
+  const [previewImages, setPreviewImages] = useState<string[]>();
+
+  function handleMapClick(event: LeafletMouseEvent) {
+    const { lat, lng } = event.latlng;
+
+    setPosition({
+      latitude: lat,
+      longitude: lng,
+    });
+  }
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+
+    const { latitude, longitude } = position;
+
+    if (!latitude || !longitude) {
+      alert('Informe a posição no mapa!');
+      return;
+    }
+
+    const data = new FormData();
+
+    data.append('name', name);
+    data.append('about', about);
+    data.append('latitude', String(latitude));
+    data.append('longitude', String(longitude));
+    data.append('instructions', instructions);
+    data.append('opening_hours', opening_hours);
+    data.append('open_on_weekends', String(open_on_weekends));
+
+    images?.forEach((image) => {
+      data.append('images', image);
+    });
+
+    await api.post('orphanages', data);
+
+    alert('Cadastro realizado');
+
+    history.push('/app');
+  }
+
+  function handleSelectImages(event: ChangeEvent<HTMLInputElement>) {
+    console.log(event.target.files);
+
+    const files = event.target.files;
+
+    if (!files) {
+      return;
+    }
+
+    setImages(Array.from(files));
+
+    const selectImagesPreview = Array.from(files).map((file) => {
+      return URL.createObjectURL(file);
+    });
+
+    setPreviewImages(selectImagesPreview);
+  }
+
   return (
     <div id="page-create-orphanage">
       <Sidebar />
 
       <main>
-        <form className="create-orphanage-form">
+        <form className="create-orphanage-form" onSubmit={handleSubmit}>
           <fieldset>
             <legend>Dados</legend>
 
             <Map
-              center={[-27.2092052, -49.6401092]}
+              center={[-26.7309334, -53.5334687]}
               style={{ width: '100%', height: 280 }}
-              zoom={15}
+              zoom={14}
+              onClick={handleMapClick}
             >
               <TileLayer
                 url={`https://api.mapbox.com/styles/v1/mapbox/light-v10/tiles/256/{z}/{x}/{y}@2x?access_token=${process.env.REACT_APP_MAPBOX_TOKEN}`}
               />
 
-              <Marker
-                interactive={false}
-                icon={happyMapIcon}
-                position={[-27.2092052, -49.6401092]}
-              />
+              {position.latitude !== 0 && (
+                <Marker
+                  interactive={false}
+                  icon={happyMapIcon}
+                  position={[position.latitude, position.longitude]}
+                />
+              )}
             </Map>
 
             <div className="input-block">
               <label htmlFor="name">Nome</label>
-              <input id="name" />
+              <input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
             </div>
 
             <div className="input-block">
               <label htmlFor="about">
                 Sobre <span>Máximo de 300 caracteres</span>
               </label>
-              <textarea id="name" maxLength={300} />
+              <textarea
+                id="about"
+                maxLength={300}
+                value={about}
+                onChange={(e) => setAbout(e.target.value)}
+              />
             </div>
 
             <div className="input-block">
               <label htmlFor="images">Fotos</label>
 
-              <div className="uploaded-image"></div>
+              <div className="images-container">
+                {previewImages?.map((image, index) => {
+                  return (
+                    <img
+                      key={`preview_image_${index}`}
+                      src={image}
+                      alt={name}
+                    />
+                  );
+                })}
 
-              <button className="new-image">
-                <FiPlus size={24} color="#15b6d6" />
-              </button>
+                <label htmlFor="image[]" className="new-image">
+                  <FiPlus size={24} color="#15b6d6" />
+                </label>
+              </div>
+              <input
+                onChange={handleSelectImages}
+                type="file"
+                id="image[]"
+                multiple
+              />
             </div>
           </fieldset>
 
@@ -62,22 +163,41 @@ export default function CreateOrphanage() {
 
             <div className="input-block">
               <label htmlFor="instructions">Instruções</label>
-              <textarea id="instructions" />
+              <textarea
+                id="instructions"
+                value={instructions}
+                onChange={(e) => setInstructions(e.target.value)}
+              />
             </div>
 
             <div className="input-block">
-              <label htmlFor="opening_hours">Nome</label>
-              <input id="opening_hours" />
+              <label htmlFor="opening_hours">Horário de funcionamento</label>
+
+              <input
+                id="opening_hours"
+                value={opening_hours}
+                onChange={(e) => setOpeningHours(e.target.value)}
+              />
             </div>
 
             <div className="input-block">
               <label htmlFor="open_on_weekends">Atende fim de semana</label>
 
               <div className="button-select">
-                <button type="button" className="active">
+                <button
+                  type="button"
+                  className={open_on_weekends ? 'active' : ''}
+                  onClick={() => setOpenOnWeekends(true)}
+                >
                   Sim
                 </button>
-                <button type="button">Não</button>
+                <button
+                  type="button"
+                  className={!open_on_weekends ? 'active' : ''}
+                  onClick={() => setOpenOnWeekends(false)}
+                >
+                  Não
+                </button>
               </div>
             </div>
           </fieldset>
