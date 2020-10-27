@@ -5,7 +5,7 @@ export default {
     return {
       id: image.id,
       //TODO: Variáveis ambiente
-      url: `http://localhost:3333/uploads/${image.path}`,
+      url: `http://192.168.24.123:3333/uploads/${image.path}`,
     };
   },
 
