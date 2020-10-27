@@ -1,13 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View, Dimensions, Text } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import MapView, { Marker, PROVIDER_GOOGLE, Callout } from 'react-native-maps';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
 import mapMarker from '../images/map-marker.png';
 import { RectButton } from 'react-native-gesture-handler';
 import api from '../services/api';
-import { or } from 'react-native-reanimated';
 
 interface Orphanage {
   id: number;
@@ -29,11 +28,11 @@ export default function OrphanagesMap() {
     navigation.navigate('SelectMapPosition');
   }
 
-  useEffect(() => {
+  useFocusEffect(() => {
     api.get('orphanages').then((res) => {
       setOrphanages(res.data);
     });
-  }, []);
+  });
 
   return (
     <View style={styles.container}>
