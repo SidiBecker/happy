@@ -8,6 +8,8 @@ export default {
   async list(req: Request, res: Response) {
     const orphanagesRepository = getRepository(Orphanage);
 
+    console.log('listando...');
+
     const orphanages = await orphanagesRepository.find({
       relations: ['images'],
     });
